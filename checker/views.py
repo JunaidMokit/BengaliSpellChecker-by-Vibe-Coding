@@ -4,17 +4,23 @@ import json
 from Levenshtein import distance
 import re
 
-# Load dictionary (Mock for now, can be replaced with a file load)
-# Ideally, we load this once when the server starts.
-# I will use a small set of common words for demonstration.
-BENGALI_DICTIONARY = {
-    "আমি", "ভাত", "খাই", "বই", "পড়ি", "স্কুলে", "যাই", "গান", "গাই", "বাংলা", "ভাষা",
-    "আমার", "নাম", "ঢাকা", "বাংলাদেশ", "সুন্দর", "পাখি", "আকাশ", "নীল", "সূর্য", 
-    "সকাল", "বিকাল", "রাত", "দিন", "মানুষ", "জীবন", "ভালোবাসা", "বন্ধু", "মা", "বাবা",
-    "ভাই", "বোন", "কাজ", "খেলা", "আনন্দ", "দুঃখ", "হাসি", "কান্না", "ফুল", "ফল", "গাছ",
-    "নদী", "সাগর", "পাহাড়", "গ্রাম", "শহর", "রাস্তা", "গাড়ি", "বাড়ি", "ঘর", "দরজা",
-    "জানালা", "টেবিল", "চেয়ার", "কাগজ", "কলম", "খাতা", "শিক্ষক", "ছাত্র", "বিশ্ববিদ্যালয়"
-}
+import os
+
+# Load dictionary from file
+# We assume words.txt is in the same directory as views.py or adjust path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DICTIONARY_PATH = os.path.join(BASE_DIR, 'words.txt')
+BENGALI_DICTIONARY = set()
+
+try:
+    with open(DICTIONARY_PATH, 'r', encoding='utf-8') as f:
+        for line in f:
+            word = line.strip()
+            if word:
+                BENGALI_DICTIONARY.add(word)
+except FileNotFoundError:
+    print(f"Warning: Dictionary file not found at {DICTIONARY_PATH}. Using empty dictionary.")
+
 
 def index(request):
     return render(request, 'checker/index.html')
