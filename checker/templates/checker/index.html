@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bengali Spell Checker AI</title>
+    <style>
+        body {
+            font-family: 'Kalpurush', 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 800px;
+        }
+
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            resize: vertical;
+            margin-bottom: 1rem;
+            font-family: inherit;
+        }
+
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: block;
+            margin: 0 auto;
+        }
+
+        button:hover {
+            background-color: #1557b0;
+        }
+
+        #result {
+            margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #fafafa;
+            min-height: 100px;
+            line-height: 1.6;
+            font-size: 1.2rem;
+        }
+
+        .error {
+            text-decoration: underline wavy red;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .error:hover::after {
+            content: attr(data-suggestions);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            z-index: 10;
+            min-width: 150px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Bengali Spell Checker AI</h1>
+        <textarea id="inputText" placeholder="Enter Bengali text here... (e.g., আমি বাংলায় গান গাই)"></textarea>
+        <button onclick="checkSpelling()">Check Spelling</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function checkSpelling() {
+            const text = document.getElementById('inputText').value;
+            const resultDiv = document.getElementById('result');
+
+            if (!text.trim()) {
+                resultDiv.innerHTML = 'Please enter some text.';
+                return;
+            }
+
+            resultDiv.innerHTML = 'Checking...';
+
+            try {
+                const response = await fetch('/api/check/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+                displayResult(data);
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = 'An error occurred while checking spelling.';
+            }
+        }
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            let html = '';
+
+            // Reconstruct text with errors highlighted
+            // This is a simplified logic; ideally the backend returns tokens or indices
+            // We assume backend returns list of { word: "wrong", suggestions: ["right"] }
+            // For better rendering, backend should return the full text segments.
+
+            // Let's assume backend returns: { corrected_text: "...", errors: [{word: "wrong", suggestions: ["..."]}] }
+            // Or better: list of tokens with status
+
+            // For now, let's just use the 'html' field from response if we generate it on server
+            // OR build it here. Let's assume server returns a list of tokens:
+            // [ {text: "আমি", is_error: false}, {text: "ভুল", is_error: true, suggestions: ["ঠিক"]} ]
+
+            if (data.tokens) {
+                data.tokens.forEach(token => {
+                    if (token.is_error) {
+                        const suggs = token.suggestions.join(', ');
+                        html += `<span class="error" data-suggestions="Suggestions: ${suggs}">${token.text}</span> `;
+                    } else {
+                        html += `${token.text} `;
+                    }
+                });
+            } else {
+                html = "No content returned.";
+            }
+
+            resultDiv.innerHTML = html;
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+
+</html>
